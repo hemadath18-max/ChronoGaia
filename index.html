@@ -1,66 +1,167 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChronoGaia - Cinematic Interface</title>
+    <title>ChronoGaia - Production UI</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #020208; font-family: monospace; color: #00ffcc; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #020208;
+            font-family: 'Courier New', Courier, monospace;
+            color: #00ffcc;
+        }
         
-        /* The Master Viewport with Integrated Video Player */
+        /* Master Viewport Layer containing the Real-Time Procedural Graphics Canvas */
         #viewport {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            overflow: hidden; background: #020208;
-            display: flex; justify-content: center; align-items: center; z-index: 1;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #020208;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
         }
-        #bg-video {
+        #gl-canvas {
             position: absolute;
-            top: 50%; left: 50%; width: 100%; height: 100%;
-            object-fit: cover; transform: translate(-50%, -50%);
-            z-index: 2; opacity: 0.55;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
         }
         #earth-visual {
-            position: relative; z-index: 3; font-size: 0.95rem;
-            text-align: center; text-shadow: 0 0 8px #00ffcc;
-            line-height: 1.6; max-width: 90%; margin-bottom: 60px;
-            background: rgba(2, 2, 8, 0.6); padding: 15px; border-radius: 6px;
+            position: relative;
+            z-index: 3;
+            font-size: 0.9rem;
+            text-align: center;
+            text-shadow: 0 0 8px #00ffcc;
+            line-height: 1.6;
+            max-width: 90%;
+            margin-bottom: 70px;
+            background: rgba(2, 2, 8, 0.7);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 255, 204, 0.2);
         }
-        .hud-panel { position: absolute; background: rgba(2, 2, 8, 0.85); border: 1px solid #00ffcc; border-radius: 6px; padding: 10px; z-index: 10; backdrop-filter: blur(8px); }
+
+        /* Translucent Cyberpunk Glass HUD Panels */
+        .hud-panel {
+            position: absolute;
+            background: rgba(2, 2, 8, 0.85);
+            border: 1px solid #00ffcc;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+            border-radius: 6px;
+            padding: 10px;
+            z-index: 10;
+            backdrop-filter: blur(8px);
+        }
         #ticker-left { top: 15px; left: 15px; width: 52%; }
-        #ticker-right { top: 15px; right: 15px; text-align: right; border-color: #ff9900; color: #ff9900; }
-        #ai-console { bottom: 125px; left: 5%; width: 90%; display: flex; }
-        #ai-input { flex: 1; background: transparent; border: none; color: #fff; padding: 8px; outline: none; font-family: inherit; }
-        #ai-btn { background: #00ffcc; color: #020208; border: none; padding: 0 15px; font-weight: bold; cursor: pointer; }
-        #controls-bottom { position: absolute; bottom: 25px; left: 5%; width: 90%; z-index: 10; }
+        #ticker-right { 
+            top: 15px; 
+            right: 15px; 
+            text-align: right; 
+            border-color: #ff9900; 
+            color: #ff9900; 
+            box-shadow: 0 0 15px rgba(255, 153, 0, 0.2); 
+        }
+        
+        /* Interactive AI Command Console Input Box */
+        #ai-console {
+            bottom: 125px;
+            left: 5%;
+            width: 90%;
+            display: flex;
+            border-color: #00ffcc;
+        }
+        #ai-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-family: inherit;
+            padding: 8px;
+            outline: none;
+            font-size: 0.8rem;
+        }
+        #ai-btn {
+            background: #00ffcc;
+            color: #020208;
+            border: none;
+            padding: 0 15px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* Bottom Time-Scrubber Control Panel */
+        #controls-bottom {
+            position: absolute;
+            bottom: 25px;
+            left: 5%;
+            width: 90%;
+            z-index: 10;
+        }
         .label { font-size: 0.65rem; opacity: 0.7; letter-spacing: 2px; text-transform: uppercase; }
         .value { font-size: 0.95rem; font-weight: bold; margin-top: 2px; }
-        input[type=range] { -webkit-appearance: none; width: 100%; background: rgba(0, 255, 204, 0.1); height: 6px; border-radius: 3px; outline: none; border: 1px solid #00ffcc; margin-top: 10px; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #00ffcc; }
+        
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: rgba(0, 255, 204, 0.1);
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+            border: 1px solid #00ffcc;
+            margin-top: 10px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #00ffcc;
+            box-shadow: 0 0 10px #00ffcc;
+        }
     </style>
 </head>
 <body>
 
     <div id="viewport">
-        <!-- Live Video Element Waiting for Content Links -->
-        <video id="bg-video" autoplay loop muted playsinline>
-            <source id="video-source" src="" type="video/mp4">
-        </video>
-        <div id="earth-visual">SYSTEM OK: READY TO INTERPOLATE VIDEO LAYERS...</div>
+        <!-- Canvas for processing real-time background animation patterns -->
+        <canvas id="gl-canvas"></canvas>
+        <div id="earth-visual">CONNECTING TO GAIA REAL-TIME TIMELINE STREAM...</div>
     </div>
 
-    <div id="ticker-left" class="hud-panel"><div class="label">AI CHRONO-STATUS</div><div id="era-val" class="value">LOADING...</div></div>
-    <div id="ticker-right" class="hud-panel"><div class="label">TIMELINE YEAR</div><div id="year-val" class="value">LOADING...</div></div>
+    <div id="ticker-left" class="hud-panel">
+        <div class="label">AI CHRONO-STATUS</div>
+        <div id="era-val" class="value">LOADING...</div>
+    </div>
+
+    <div id="ticker-right" class="hud-panel">
+        <div class="label">TIMELINE YEAR</div>
+        <div id="year-val" class="value">LOADING...</div>
+    </div>
 
     <div id="ai-console" class="hud-panel">
-        <input type="text" id="ai-input" placeholder="Ask AI about plant evolution on this exact day...">
+        <input type="text" id="ai-input" placeholder="Query historical day data...">
         <button id="ai-btn">QUERY AI</button>
     </div>
 
     <div id="controls-bottom">
-        <div class="label" style="text-align: center;">HOLD & DRAG TO SEE PLANT EVOLUTION AND DEATH</div>
-        <input type="range" id="timeSlider" min="1" max="3" value="1" step="1">
+        <div class="label" style="text-align: center;">HOLD & DRAG TO WARP PLANET HISTORY</div>
+        <input type="range" id="timeSlider" min="1" max="5" value="3" step="1">
     </div>
 
     <script>
@@ -68,52 +169,101 @@
         const eraDisplay = document.getElementById('era-val');
         const yearDisplay = document.getElementById('year-val');
         const visualDisplay = document.getElementById('earth-visual');
-        const videoElement = document.getElementById('bg-video');
-        const videoSource = document.getElementById('video-source');
         const aiInput = document.getElementById('ai-input');
         const aiBtn = document.getElementById('ai-btn');
+        const canvas = document.getElementById('gl-canvas');
+        const ctx = canvas.getContext('2d');
 
-        // Master Plant Evolution Data Dictionary
-        // NOTE: Replace the video URLs below with real hosted mp4 links to watch them play!
-        const timelineData = {
-            1: {
-                era: "PALEOZOIC ERA",
-                year: "-450 MILLION YRS",
-                video: "https://w3schools.com", // Test placeholder link
-                visual: "🌱 <b>THE FIRST PLANTS:</b> Algae transitions onto bare rock. Primitive mosses and liverworts develop, creating the very first oxygen layers on land.",
-                defaultQuery: "How did early land plants survive without soil?"
-            },
-            2: {
-                era: "CARBONIFEROUS ERA",
-                year: "-300 MILLION YRS",
-                video: "https://w3schools.com", // Test placeholder link
-                visual: "🌳 <b>MAXIMUM EVOLUTION:</b> Giant scale trees and dense, hyper-green swamp forests cover the globe, driving atmospheric oxygen to its highest levels in history.",
-                defaultQuery: "Explain the size of trees in the Carboniferous era."
-            },
-            3: {
-                era: "THE COLD END",
-                year: "+4 BILLION YRS",
-                video: "https://w3schools.com", // Test placeholder link
-                visual: "🍂 <b>THE FINAL DEATH:</b> The sun expands and temperatures skyrocket. Photosynthesis breaks down completely, carbon dioxide plummets, and the last remaining plant life dries out forever.",
-                defaultQuery: "What happens to the final plant species on Earth?"
-            }
+        const BACKEND_URL = window.location.origin;
+        const DEVICE_ID = "mobile_user_dev_01";
+
+        const eraMap = {
+            1: "COSMIC ORIGIN",
+            2: "TRETA YUGA",
+            3: "DWAPARA YUGA",
+            4: "PRESENT DAY",
+            5: "FUTURE PROJECTION"
         };
 
-        function updateTimeline() {
-            const state = timelineData[slider.value];
-            eraDisplay.textContent = state.era;
-            yearDisplay.textContent = state.year;
-            visualDisplay.innerHTML = state.visual;
-            aiInput.value = state.defaultQuery;
+        const timelineData = {
+            1: { era: "COSMIC ORIGIN", year: "-4.5 BILLION YRS", color: "#ff3300", visual: "🌋 <b>EARTH BIRTH:</b> Planet forming from molten magma fields and solar system debris. Surface thermal fields active.", defaultQuery: "Analyze atmospheric composition at birth." },
+            2: { era: "TRETA YUGA", year: "7000+ BCE", color: "#ffcc00", visual: "🏹 <b>TRETA YUGA:</b> Early forest ecosystems developing. Sri Rama's chronological journey loaded. Astronomical star alignments verified.", defaultQuery: "Show me the mapping of Ram Setu construction." },
+            3: { era: "DWAPARA YUGA", year: "3102 BCE", color: "#00ccff", visual: "🔱 <b>DWAPARA YUGA:</b> Dense flora and stable continental layout. Sri Krishna's daily history module active. Underwater structures of Dwarka mapped.", defaultQuery: "Show me the underwater structure of Dwarka." },
+            4: { era: "PRESENT DAY", year: "2026 AD", color: "#00ff66", visual: "🌍 <b>PRESENT DAY:</b> Global human infrastructure active. Real-time satellite imagery feeds tracking urban expansion and forest cover changes.", defaultQuery: "Show real-time global footprint expansion." },
+            5: { era: "FUTURE PROJECTION", year: "+100 YEARS", color: "#cc00ff", visual: "🚀 <b>FUTURE PROJECTION:</b> Environmental predictive engine active. Calculating planetary shifts and technology expansion metrics.", defaultQuery: "Project family legacy 100 years forward." }
+        };
+
+        // Resize Canvas to fit mobile screens perfectly
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Canvas Generative Visual Matrix Effect
+        let particleArray = [];
+        function initParticles() {
+            particleArray = [];
+            for(let i=0; i<60; i++) {
+                particleArray.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 1,
+                    speedX: (Math.random() - 0.5) * 1
+                });
+            }
+        }
+        initParticles();
+
+        function animateVisuals() {
+            ctx.fillStyle = 'rgba(2, 2, 8, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Switch the background video stream data path
-            videoSource.src = state.video;
-            videoElement.load();
-            videoElement.play().catch(err => console.log("Waiting for user tap to spin video player"));
+            const currentConfig = timelineData[slider.value];
+            ctx.fillStyle = currentConfig.color;
+            ctx.strokeStyle = currentConfig.color;
+
+            // Draw a central glowing vector core simulating planetary energy fields
+            ctx.beginPath();
+            ctx.arc(canvas.width/2, canvas.height/2 - 40, 80, 0, Math.PI * 2);
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+
+            particleArray.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                p.x += p.speedX;
+                if(p.x > canvas.width) p.x = 0;
+                if(p.x < 0) p.x = canvas.width;
+            });
+
+            requestAnimationFrame(animateVisuals);
+        }
+        animateVisuals();
+
+        async function initDeviceSession() {
+            try {
+                let res = await fetch(`${BACKEND_URL}/api/user/sync-init`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ device_id: DEVICE_ID })
+                });
+                let data = await res.json();
+                slider.value = data.session_data.current_year_index;
+                updateInterfaceLocal();
+            } catch(e) {
+                updateInterfaceLocal();
+            }
         }
 
-        slider.addEventListener('input', updateTimeline);
-        updateTimeline();
-    </script>
-</body>
-</html>
+        async function saveStateToCloud(index) {
+            try {
+                await fetch(`${BACKEND_URL}/api/timeline/save-state`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        device_id: DEVICE_ID,
+                        current_year_index: parseInt(index),
+        
