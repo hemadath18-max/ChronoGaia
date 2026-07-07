@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gaia Engine v1.0 - Production Architecture</title>
+    <style>
+        :root {
+            --neon-blue: #00ffcc;
+            --neon-orange: #ff9900;
+            --glass-bg: rgba(2, 2, 8, 0.88);
+            --border-glow: 1px solid rgba(0, 255, 204, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #010103;
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--neon-blue);
+        }
+
+        /* 8K Streaming Canvas Simulation Container */
+        #media-viewport {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #070d1f 0%, #010103 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+            padding: 20px;
+        }
+
+        #canvas-stream-indicator {
+            font-size: 0.95rem;
+            text-align: center;
+            text-shadow: 0 0 10px var(--neon-blue);
+            line-height: 1.7;
+            max-width: 90%;
+            margin-bottom: 40px;
+        }
+
+        /* Authentication Overlay Gate */
+        #auth-gate {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #020206;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            transition: opacity 0.5s ease;
+        }
+
+        .auth-card {
+            background: var(--glass-bg);
+            border: var(--border-glow);
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
+            padding: 30px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+        }
+
+        .auth-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px var(--neon-blue);
+        }
+
+        .auth-input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(0, 255, 204, 0.2);
+            padding: 12px;
+            color: #fff;
+            font-family: inherit;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .auth-input:focus {
+            border-color: var(--neon-blue);
+        }
+
+        .auth-btn {
+            width: 100%;
+            background: var(--neon-blue);
+            color: #020206;
+            border: none;
+            padding: 12px;
+            font-family: inherit;
+            font-weight: bold;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+        }
+
+        /* HUD Panels */
+        .hud-panel {
+            position: absolute;
+            background: var(--glass-bg);
+            border: var(--border-glow);
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.15);
+            border-radius: 6px;
+            padding: 10px;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        #ticker-left { top: 15px; left: 15px; width: 52%; }
+        #ticker-right { 
+            top: 15px; 
+            right: 15px; 
+            text-align: right; 
+            border-color: var(--neon-orange); 
+            color: var(--neon-orange); 
+            box-shadow: 0 0 15px rgba(255, 153, 0, 0.15); 
+        }
+
+        /* Real-Time Dialogue Box for Doubts */
+        #doubt-console {
+            bottom: 115px;
+            left: 5%;
+            width: 90%;
+            display: flex;
+            border-color: var(--neon-blue);
+        }
+
+        #doubt-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-family: inherit;
+            padding: 10px;
+            outline: none;
+            font-size: 0.85rem;
+        }
+
+        #doubt-submit-btn {
+            background: var(--neon-blue);
+            color: #020206;
+            border: none;
+            padding: 0 15px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* Timeline Scrubber Frame */
+        #timeline-frame {
+            position: absolute;
+            bottom: 25px;
+            left: 5%;
+            width: 90%;
+            z-index: 10;
+        }
+
+        .label { font-size: 0.65rem; opacity: 0.7; letter-spacing: 2px; text-transform: uppercase; }
+        .value { font-size: 0.95rem; font-weight: bold; margin-top: 2px; }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: rgba(0, 255, 204, 0.1);
+            height: 6px;
+            border-radius: 3px;
+            outline: none;
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            margin-top: 8px;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--neon-blue);
+            box-shadow: 0 0 12px var(--neon-blue);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Access Control Entrance -->
+    <div id="auth-gate">
+        <div class="auth-card">
+            <div class="auth-title">GAIA ENGINE V1.0</div>
+            <p class="label" style="margin-bottom: 15px;">SECURE SECULAR ACCOUNT SYNCHRONIZATION</p>
+            <input type="text" id="username-entry" class="auth-input" placeholder="ENTER USERNAME">
+            <button id="register-trigger" class="auth-btn">INITIALIZE CORE LINK</button>
+        </div>
+    </div>
+
+    <!-- Active 8K Pipeline Viewport Canvas -->
+    <div id="media-viewport">
+        <div id="canvas-stream-indicator">LOADING STREAM PIPELINE MODULES...</div>
+    </div>
+
+    <!-- Dynamic Metrics Tickers -->
+    <div id="ticker-left" class="hud-panel">
+        <div class="label">COSMIC TELEMETRY STATUS</div>
+        <div id="era-indicator" class="value">AWAITING CORRELATION</div>
+    </div>
+
+    <div id="ticker-right" class="hud-panel">
+        <div class="label">INDEX CHRONOLOGY</div>
+        <div id="year-indicator" class="value">0.00 YRS</div>
+    </div>
+
+    <!-- Live AI Doubt Query System Component -->
+    <div id="doubt-console" class="hud-panel">
+        <input type="text" id="doubt-input" placeholder="Type a history or future doubt here...">
+        <button id="doubt-submit-btn">ASK BRAIN</button>
+    </div>
+
+    <!-- Spatial Chronology Tracking Controller Slider -->
+    <div id="timeline-frame">
+        <div class="label" style="text-align: center;">DRAG TO TRAVERSE COMPLETE METRIC LIFE DEPTH</div>
+        <input type="range" id="masterChronologySlider" min="1" max="6" value="3" step="1">
+    </div>
+
+    <script>
+        const authGate = document.getElementById('auth-gate');
+        const usernameEntry = document.getElementById('username-entry');
+        const registerTrigger = document.getElementById('register-trigger');
+        
+        const slider = document.getElementById('masterChronologySlider');
+        const eraIndicator = document.getElementById('era-indicator');
+        const yearIndicator = document.getElementById('year-indicator');
+        const streamIndicator = document.getElementById('canvas-stream-indicator');
+        const doubtInput = document.getElementById('doubt-input');
+        const doubtSubmitBtn = document.getElementById('doubt-submit-btn');
+
+        // Master Epoch Framework Dataset Architecture (Birth to Death)
+        const absoluteTimelineMap = {
+            1: {
+                era: "COSMIC BIRTH",
+                year: "-4.5 BILLION YRS",
+                stream: "📹 <b>[8K STREAM LAYER 01 - ACTIVE]</b><br>Earth forming via core accretion. Severe asteroid bombardment fields occurring. Surface rendering magma dynamics.",
+                context: "molten creation accretion core"
+            },
+            2: {
+                era: "TRETA YUGA",
+                year: "7000+ BCE",
+                stream: "📹 <b>[8K STREAM LAYER 02 - ACTIVE]</b><br>Itihasa verification engine online. Rendering day-by-day progression of Sri Rama's journey across ancient geography. Coordinates verified via star positioning algorithms.",
+                context: "ramayana rama ayodhya setu"
+            },
+            3: {
+                era: "DWAPARA YUGA",
+                year: "3102 BCE",
+                stream: "📹 <b>[8K STREAM LAYER 03 - ACTIVE]</b><br>Itihasa verification engine online. Tracking hour-by-hour historical paths of Sri Krishna. Submerged structure analysis mapping defensive fortifications in Dwarka.",
+                context: "krishna dwarka kurukshetra yuga"
+            },
+            4: {
+                era: "PRESENT ERA",
+                year: "2026 AD",
+                stream: "📹 <b>[8K STREAM LAYER 04 - ACTIVE]</b><br>Live spatial satellite network active. Processing worldwide anthropological grids and infrastructure evolution parameters dynamically.",
+                context: "anthropocene satellite matrix mapping"
+            },
+            5: {
+                era: "FUTURE CENTURY",
+                year: "+100 YEARS",
+      
